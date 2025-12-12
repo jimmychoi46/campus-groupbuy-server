@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum ListingType {
+  USED
+  GROUP
+}
+
+enum ListingStatus {
+  OPEN
+  CLOSED
+}
+
+model Listing {
+  id          String        @id @default(cuid())
+  type        ListingType
+  title       String
+  price       Int
+  campus      String
+  status      ListingStatus @default(OPEN)
+  groupTarget Int?
+  groupJoined Int?
+  desc        String
+  ownerEmail  String
+  ownerName   String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
