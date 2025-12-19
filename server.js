@@ -19,21 +19,20 @@ app.get("/api/listings", async (req, res) => {
   const items = await prisma.listing.findMany({
     where,
     orderBy: { createdAt: "desc" },
-    include: { owner: true },
   });
   res.json(items);
 });
 
 app.get("/api/listings/:id", async (req, res) => {
-  const item = await prisma.listing.findUnique({ where: { id: req.params.id }, include: { owner: true } });
+  const item = await prisma.listing.findUnique({ where: { id: req.params.id }});
   if (!item) return res.status(404).json({ message: "Not found" });
   res.json(item);
 });
 
 app.post("/api/listings", async (req, res) => {
-  const { type, title, price, campus, desc, groupTarget, ownerId, deadline, negotiable} = req.body;
+  const { type, title, price, campus, desc, groupTarget, ownerEmail, ownerName, deadline, negotiable} = req.body;
 
-  if (!type || !title || typeof price !== "number" || !campus || !desc || !ownerId) {
+  if (!type || !title || typeof price !== "number" || !campus || !desc || !ownerEmail) {
     return res.status(400).json({ message: "Missing fields" });
   }
 
@@ -52,13 +51,13 @@ app.post("/api/listings", async (req, res) => {
     price: Number(price),
     campus,
     desc,
-    ownerId, 
+    ownerEmail,
+    ownerName: ownerName || "학생",
     groupTarget: type === "GROUP" ? Number(groupTarget || 2) : null,
     groupJoined: type === "GROUP" ? 1 : null,
     deadline: verifiedDeadline,
     negotiable: negotiable ?? false
    },
-   include: { owner: true }
   });
 
 
@@ -83,8 +82,7 @@ app.post("/api/listings/:id/join", async (req, res) => {
         groupJoined: joined,
         status: joined >= target ? "CLOSED" : "OPEN",
       },
-      include: { owner: true },
-    });
+  });
 
     return { status: 200, body: updated };
   });
