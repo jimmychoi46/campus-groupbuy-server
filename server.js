@@ -23,6 +23,27 @@ app.get("/api/listings", async (req, res) => {
   res.json(items);
 });
 
+app.post("/api/listings/:id/toggle", async (req, res) => {
+  const id = req.params.id; 
+  
+  try { 
+    const item = await prisma.listing.findUnique({ where: { id } }); 
+    if (!item) return res.status(404).json({ message: "Not found" }); 
+    
+    const newStatus = item.status === "OPEN" ? "CLOSED" : "OPEN"; 
+    
+    const updated = await prisma.listing.update({
+      where: { id },
+      data: { status: newStatus } 
+    }); 
+    
+    res.json(updated); 
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" }); 
+  } 
+});
+
 app.get("/api/listings/:id", async (req, res) => {
   const item = await prisma.listing.findUnique({ where: { id: req.params.id }});
   if (!item) return res.status(404).json({ message: "Not found" });
