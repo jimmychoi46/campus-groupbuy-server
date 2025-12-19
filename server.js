@@ -31,12 +31,20 @@ app.get("/api/listings/:id", async (req, res) => {
 });
 
 app.post("/api/listings", async (req, res) => {
-  const { type, title, price, campus, desc, groupTarget, ownerId } = req.body;
+  const { type, title, price, campus, desc, groupTarget, ownerId, deadline, negotiable} = req.body;
 
   if (!type || !title || typeof price !== "number" || !campus || !desc || !ownerId) {
     return res.status(400).json({ message: "Missing fields" });
   }
 
+  let verifiedDeadline = null;
+  if (deadline) {
+    const dead = new Date(deadline);
+    if (isNaN(dead.getTime())) {
+      return res.status(400).json({ message: "Invalid deadline"});
+    }
+    verifiedDeadline = dead;
+  }
   const created = await prisma.listing.create({
    data: {
     type,
@@ -47,6 +55,8 @@ app.post("/api/listings", async (req, res) => {
     ownerId, 
     groupTarget: type === "GROUP" ? Number(groupTarget || 2) : null,
     groupJoined: type === "GROUP" ? 1 : null,
+    deadline: verifiedDeadline,
+    negotiable: negotiable ?? false
    },
    include: { owner: true }
   });
