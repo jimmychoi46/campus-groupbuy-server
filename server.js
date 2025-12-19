@@ -47,6 +47,50 @@ app.post("/api/listings", async (req, res) => {
     verifiedDeadline = dead;
   }
   const created = await prisma.listing.create({
+   data: {
+    type,
+    title,
+    price: Number(price),
+    campus,
+    desc,
+    ownerEmail,
+    ownerName: ownerName || "학생",
+    groupTarget: type === "GROUP" ? Number(groupTarget || 2) : null,
+    groupJoined: type === "GROUP" ? 1 : null,
+    deadline: verifiedDeadline,
+    negotiable: negotiable ?? false
+   },
+  });
+
+
+  res.status(201).json(created);
+});
+
+app.post("/api/listings/:id/join", async (req, res) => {
+  const id = req.params.id;
+
+  const result = await prisma.$transaction(async (tx) => {
+    const item = await tx.listing.findUnique({ where: { id } });
+    if (!item) return { status: 404, body: { message: "Not found" } };
+    if (item.type !== "GROUP") return { status: 400, body: { message: "Not GROUP" } };
+    if (item.status !== "OPEN") return { status: 400, body: { message: "Already closed" } };
+
+    const joined = (item.groupJoined ?? 0) + 1;
+    const target = item.groupTarget ?? 0;
+
+    const updated = await tx.listing.update({
+      where: { id },
+      data: {
+        groupJoined: joined,
+        status: joined >= target ? "CLOSED" : "OPEN",
+      },
+  });
+
+    return { status: 200, body: updated };
+  });
+
+  res.status(result.status).json(result.body);
+});
  
 // 토글 라우트
     
