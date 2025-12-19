@@ -17,6 +17,7 @@ enum ListingStatus {
   CLOSED
 }
 
+// 마감일(deadline) 및 협상 가능 여부(negotiable) 컬럼 추가
 
 model Listing {
   id          String        @id @default(cuid())
