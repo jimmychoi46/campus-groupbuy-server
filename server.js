@@ -19,36 +19,38 @@ app.get("/api/listings", async (req, res) => {
   const items = await prisma.listing.findMany({
     where,
     orderBy: { createdAt: "desc" },
+    include: { owner: true },
   });
   res.json(items);
 });
 
 app.get("/api/listings/:id", async (req, res) => {
-  const item = await prisma.listing.findUnique({ where: { id: req.params.id } });
+  const item = await prisma.listing.findUnique({ where: { id: req.params.id }, include: { owner: true } });
   if (!item) return res.status(404).json({ message: "Not found" });
   res.json(item);
 });
 
 app.post("/api/listings", async (req, res) => {
-  const { type, title, price, campus, desc, groupTarget, ownerEmail, ownerName } = req.body;
+  const { type, title, price, campus, desc, groupTarget, ownerId } = req.body;
 
-  if (!type || !title || price == null || !campus || !desc || !ownerEmail) {
+  if (!type || !title || typeof price !== "number" || !campus || !desc || !ownerId) {
     return res.status(400).json({ message: "Missing fields" });
   }
 
   const created = await prisma.listing.create({
-    data: {
-      type,
-      title,
-      price: Number(price),
-      campus,
-      desc,
-      ownerEmail,
-      ownerName: ownerName || "학생",
-      groupTarget: type === "GROUP" ? Number(groupTarget || 2) : null,
-      groupJoined: type === "GROUP" ? 1 : null,
-    },
+   data: {
+    type,
+    title,
+    price: Number(price),
+    campus,
+    desc,
+    ownerId, 
+    groupTarget: type === "GROUP" ? Number(groupTarget || 2) : null,
+    groupJoined: type === "GROUP" ? 1 : null,
+   },
+   include: { owner: true }
   });
+
 
   res.status(201).json(created);
 });
@@ -71,6 +73,7 @@ app.post("/api/listings/:id/join", async (req, res) => {
         groupJoined: joined,
         status: joined >= target ? "CLOSED" : "OPEN",
       },
+      include: { owner: true },
     });
 
     return { status: 200, body: updated };
