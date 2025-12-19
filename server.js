@@ -90,4 +90,29 @@ app.post("/api/listings/:id/join", async (req, res) => {
   res.status(result.status).json(result.body);
 });
 
+app.post("/api/listings/:id/close", async (req, res) => {
+  const id = req.params.id;
+  
+  try { 
+    const updated = await prisma.listing.update({
+      where: { id },
+      data: { status: "CLOSED" } 
+    }); 
+    res.json(updated); 
+  } catch (err) { 
+    res.status(404).json({ message: "Not found" }); 
+  } 
+});
+
+app.delete("/api/listings/:id", async (req, res) => {
+  const id = req.params.id;
+  
+  try { 
+    await prisma.listing.delete({ where: { id } });
+    res.json({ ok: true });
+  } catch (err) { 
+    res.status(404).json({ message: "Not found" }); 
+  } 
+});
+
 app.listen(4000, () => console.log("API running on http://localhost:4000"));
