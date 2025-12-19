@@ -96,13 +96,14 @@ app.post("/api/listings/:id/join", async (req, res) => {
     
 app.post("/api/listings/:id/toggle", async (req, res) => {
   const id = req.params.id; 
+  const userEmail = req.headers["x-user-email"];
   
   try { 
     const item = await prisma.listing.findUnique({ where: { id } }); 
     if (!item) return res.status(404).json({ message: "Not found" }); 
 
-    // 작성자 및 운영자만 접근 가능
-    if (item.ownerEmail !== userEmail && userRole !== "ADMIN") {
+    // 작성자만 접근 가능
+    if (item.ownerEmail !== userEmail) {
       return res.status(403).json({ message: "Not allowed" }); 
     }
     
@@ -129,8 +130,8 @@ app.delete("/api/listings/:id", async (req, res) => {
     const item = await prisma.listing.findUnique({ where: { id } }); 
     if (!item) return res.status(404).json({ message: "Not found" }); 
 
-    // 작성자 및 운영자만 접근 가능
-    if (item.ownerEmail !== userEmail && userRole !== "ADMIN") { 
+    // 작성자만 접근 가능
+    if (item.ownerEmail !== userEmail) { 
       return res.status(403).json({ message: "Not allowed" }); 
     } 
     
