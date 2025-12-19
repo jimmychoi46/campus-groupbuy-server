@@ -17,6 +17,14 @@ enum ListingStatus {
   CLOSED
 }
 
+model Owner {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  listings  Listing[]
+}
+
 model Listing {
   id          String        @id @default(cuid())
   type        ListingType
@@ -29,8 +37,8 @@ model Listing {
   deadline    DateTime?
   desc        String
   negotiable  Boolean       @default(false)
-  ownerEmail  String
-  ownerName   String
+  ownerId     String
+  owner       Owner         @relation(fields: [ownerId], references: [id])
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }
