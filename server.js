@@ -106,12 +106,20 @@ app.post("/api/listings/:id/close", async (req, res) => {
 
 app.delete("/api/listings/:id", async (req, res) => {
   const id = req.params.id;
+  const userEmail = req.headers["x-user-email"];
   
   try { 
-    await prisma.listing.delete({ where: { id } });
-    res.json({ ok: true });
-  } catch (err) { 
-    res.status(404).json({ message: "Not found" }); 
+    const item = await prisma.listing.findUnique({ where: { id } }); 
+    if (!item) return res.status(404).json({ message: "Not found" }); 
+    
+    if (item.ownerEmail !== userEmail) { 
+      return res.status(403).json({ message: "Not allowed" }); 
+    } 
+    
+    await prisma.listing.delete({ where: { id } }); 
+    res.json({ ok: true }); 
+  } catch (err) {
+    res.status(500).json({ message: "Server error" }); 
   } 
 });
 
